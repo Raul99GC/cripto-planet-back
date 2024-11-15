@@ -1,6 +1,6 @@
 package com.rcgraul.cripto_planet.enums;
 
-public enum USER_ROLE {
+public enum UserRole {
     ROLE_ADMIN,
     ROLE_COSTUMER
 }

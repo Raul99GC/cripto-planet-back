@@ -1,0 +1,9 @@
+package com.rcgraul.cripto_planet.exceptions;
+
+public class EmailAlreadyExistsException extends RuntimeException {
+
+    public EmailAlreadyExistsException(String message) {
+        super(message);
+    }
+
+}

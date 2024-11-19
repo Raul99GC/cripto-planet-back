@@ -69,7 +69,6 @@ public class UserService implements IUserService {
         newUser.setEnabled(true);
         newUser.setCredentialsExpiryDate(LocalDate.now().plusYears(30));
         newUser.setAccountExpiryDate(LocalDate.now().plusYears(30));
-        newUser.setTwoFactorEnabled(false);
         newUser.setSignUpMethod("email");
 
         return userRepository.save(newUser);

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -21,10 +22,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
 @Data
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -52,8 +55,11 @@ public class User {
     private LocalDate credentialsExpiryDate;
     private LocalDate accountExpiryDate;
 
-    private String twoFactorSecret;
-    private boolean isTwoFactorEnabled = false;
+    // private String twoFactorSecret;
+    // private boolean isTwoFactorEnabled = false;
+    @Embedded
+    private TwoFactorAuth twoFactorAuth = new TwoFactorAuth();
+    
     private String signUpMethod;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)

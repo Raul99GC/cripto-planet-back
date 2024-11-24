@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.rcgraul.cripto_planet.enums.OauthClientId;
 import com.rcgraul.cripto_planet.enums.UserRole;
 import com.rcgraul.cripto_planet.models.Role;
+import com.rcgraul.cripto_planet.models.TwoFactorAuth;
 import com.rcgraul.cripto_planet.models.User;
 import com.rcgraul.cripto_planet.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,8 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
             idAttributeKey = "id";
             username = attributes.getOrDefault("login", "").toString();
         }
+
+        //TODO: agregarle firebase
 
         System.out.println("HELLO OAUTH: " + email + " : " + realName + " : " + username);
 
@@ -167,12 +170,18 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         authorities.add(new SimpleGrantedAuthority(user.getRole().getRoleName().name()));
 
+        TwoFactorAuth twoFactorAuth = new TwoFactorAuth();
+        twoFactorAuth.setEAbled(user.getTwoFactorAuth().isEAbled());
+        twoFactorAuth.setSentTo(user.getTwoFactorAuth().getSentTo());
+
         // Crear una instancia de UserDetailsImpl con los datos del usuario
         UserDetailsImpl userDetails = new UserDetailsImpl(
                 null, // ID no relevante aquí
                 username, // Nombre de usuario
                 email, // Email
                 null, // Contraseña no necesaria (es OAuth2)
+                "OAuth2",
+                twoFactorAuth,
                 authorities
         );
 
@@ -216,5 +225,4 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
         return nameMap;
     }
-
 }

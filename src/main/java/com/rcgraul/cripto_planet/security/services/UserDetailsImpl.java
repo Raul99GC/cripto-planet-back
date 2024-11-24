@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import com.rcgraul.cripto_planet.models.TwoFactorAuth;
+import com.rcgraul.cripto_planet.models.TwoFactorOTP;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,16 +46,21 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
 
-    private boolean is2faEnabled;
+    private String signUpMethod;
+
+    private TwoFactorAuth twoFactorAuth; // Añadido
 
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(UUID id, String username, String email, String password,
+                           String signUpMethod, TwoFactorAuth twoFactorAuth,
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
+        this.signUpMethod = signUpMethod;
+        this.twoFactorAuth = twoFactorAuth; // Inicializado
         this.authorities = authorities;
     }
 
@@ -72,21 +79,15 @@ public class UserDetailsImpl implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                List.of(authority) // Wrapping the single authority in a list
+                user.getSignUpMethod(),
+                user.getTwoFactorAuth(), // Pasando TwoFactorAuth desde User
+                List.of(authority)
         );
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
     }
 
     @Override
@@ -117,10 +118,6 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public boolean is2faEnabled() {
-        return is2faEnabled;
     }
 
     @Override

@@ -1,15 +1,18 @@
 package com.rcgraul.cripto_planet.config;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.rcgraul.cripto_planet.enums.OauthClientId;
 import com.rcgraul.cripto_planet.enums.UserRole;
 import com.rcgraul.cripto_planet.models.Role;
 import com.rcgraul.cripto_planet.models.TwoFactorAuth;
 import com.rcgraul.cripto_planet.models.User;
+import com.rcgraul.cripto_planet.repositories.RoleRepository;
+import com.rcgraul.cripto_planet.security.jwt.JwtUtils;
 import com.rcgraul.cripto_planet.security.services.UserDetailsImpl;
+import com.rcgraul.cripto_planet.services.user.UserService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,15 +23,11 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-
-import com.rcgraul.cripto_planet.repositories.RoleRepository;
-import com.rcgraul.cripto_planet.security.jwt.JwtUtils;
-import com.rcgraul.cripto_planet.services.user.UserService;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -75,11 +74,14 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         DefaultOAuth2User principal = (DefaultOAuth2User) oAuth2Token.getPrincipal();
         Map<String, Object> attributes = principal.getAttributes();
 
-        email = attributes.get("email").toString();
-        realName = attributes.get("name").toString();
+        email = attributes.get("email") != null ? attributes.get("email").toString() : "";
+        realName = attributes.get("name") != null ? attributes.get("name").toString() : "";
+
+        OauthClientId signUpMethod = OauthClientId.GITHUB;
 
         if (oAuth2Token.getAuthorizedClientRegistrationId().equals("google")) {
             idAttributeKey = "sub";
+            signUpMethod = OauthClientId.GOOGLE;
         } else if (oAuth2Token.getAuthorizedClientRegistrationId().equals("github")) {
             idAttributeKey = "id";
             username = attributes.getOrDefault("login", "").toString();
@@ -89,11 +91,13 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
         System.out.println("HELLO OAUTH: " + email + " : " + realName + " : " + username);
 
-        Optional<User> userDb = userService.findByEmail(email);
+        Optional<User> userDb = userService.findByUsername(username);
 
         if (userDb.isPresent()) {
 
-            if (!userDb.get().getSignUpMethod().equals(idAttributeKey)) {
+            // aqui es para cuando el user existe pero no tiene el mismo signUpMethod, osea que el usuario se registro con un proveedor diferente
+            boolean isSameProvider = !userDb.get().getSignUpMethod().name().equals(oAuth2Token.getAuthorizedClientRegistrationId().toUpperCase());
+            if (isSameProvider) {
                 String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/account-exists")
                         .build()
                         .toUriString();
@@ -136,8 +140,10 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
             newUser.setFirstName(firstName);
             newUser.setLastName(lastName);
             newUser.setEmail(email);
-            newUser.setSignUpMethod(oAuth2Token.getAuthorizedClientRegistrationId());
 
+            newUser.setOAuth(true);
+
+            newUser.setSignUpMethod(signUpMethod);
             userService.createUser(newUser);
 
             // Crear un DefaultOAuth2User para el nuevo usuario
@@ -180,7 +186,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                 username, // Nombre de usuario
                 email, // Email
                 null, // Contraseña no necesaria (es OAuth2)
-                "OAuth2",
+                signUpMethod,
                 twoFactorAuth,
                 authorities
         );

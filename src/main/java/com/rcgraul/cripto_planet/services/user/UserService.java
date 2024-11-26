@@ -2,6 +2,7 @@ package com.rcgraul.cripto_planet.services.user;
 
 import com.rcgraul.cripto_planet.enums.UserRole;
 import com.rcgraul.cripto_planet.exceptions.EmailAlreadyExistsException;
+import com.rcgraul.cripto_planet.exceptions.ExpiredTokenException;
 import com.rcgraul.cripto_planet.exceptions.RoleNotFoundException;
 import com.rcgraul.cripto_planet.exceptions.UsernameAlreadyExistsException;
 import com.rcgraul.cripto_planet.models.PasswordResetToken;
@@ -108,7 +109,7 @@ public class UserService implements IUserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.isOAuth()) {
+        if (user.isOAuth()) {
             throw new IllegalArgumentException("Password reset is not allowed for this account");
         }
 
@@ -125,4 +126,26 @@ public class UserService implements IUserService {
     }
 
 
+    @Override
+    public void resetPassword(String token, String password) {
+
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid Password reset token"));
+
+        if (resetToken.isUsed()) {
+            throw new IllegalStateException("Password reset token already used");
+        }
+
+        if (resetToken.getExpiryDate().isBefore(Instant.now())) {
+            throw new ExpiredTokenException("Password reset token expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+    }
 }

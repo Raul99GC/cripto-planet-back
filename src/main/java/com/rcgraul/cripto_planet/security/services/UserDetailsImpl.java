@@ -1,20 +1,18 @@
 package com.rcgraul.cripto_planet.security.services;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.rcgraul.cripto_planet.enums.OauthClientId;
 import com.rcgraul.cripto_planet.models.TwoFactorAuth;
-import com.rcgraul.cripto_planet.models.TwoFactorOTP;
+import com.rcgraul.cripto_planet.models.User;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.rcgraul.cripto_planet.models.User;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Clase `UserDetailsImpl`
@@ -46,14 +44,14 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
 
-    private String signUpMethod;
+    private OauthClientId signUpMethod;
 
     private TwoFactorAuth twoFactorAuth; // Añadido
 
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(UUID id, String username, String email, String password,
-                           String signUpMethod, TwoFactorAuth twoFactorAuth,
+                           OauthClientId signUpMethod, TwoFactorAuth twoFactorAuth,
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;

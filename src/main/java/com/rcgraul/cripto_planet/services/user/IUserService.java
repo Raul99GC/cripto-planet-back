@@ -1,9 +1,9 @@
 package com.rcgraul.cripto_planet.services.user;
 
-import java.util.Optional;
-
 import com.rcgraul.cripto_planet.models.User;
 import com.rcgraul.cripto_planet.security.request.SignupRequest;
+
+import java.util.Optional;
 
 public interface IUserService {
 
@@ -14,4 +14,6 @@ public interface IUserService {
     Optional<User> findByEmail(String email);
 
     Optional<User> findByUsername(String username);
+
+    void resetPassword(String token, String password);
 }

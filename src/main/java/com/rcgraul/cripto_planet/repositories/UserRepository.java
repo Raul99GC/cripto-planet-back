@@ -1,11 +1,10 @@
 package com.rcgraul.cripto_planet.repositories;
 
-import java.util.Optional;
-import java.util.UUID;
-
+import com.rcgraul.cripto_planet.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.rcgraul.cripto_planet.models.User;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
@@ -15,4 +14,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     public boolean existsByUsername(String username);
 
+    Optional<User> findByUsername(String username);
 }

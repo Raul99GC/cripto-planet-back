@@ -12,4 +12,6 @@ public interface IUserService {
     User createUser(User user);
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 }

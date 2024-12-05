@@ -1,6 +1,7 @@
 package com.rcgraul.cripto_planet.controllers;
 
 import com.rcgraul.cripto_planet.exceptions.EmailAlreadyExistsException;
+import com.rcgraul.cripto_planet.exceptions.ExpiredTokenException;
 import com.rcgraul.cripto_planet.exceptions.UsernameAlreadyExistsException;
 import com.rcgraul.cripto_planet.security.MessageResponse;
 import com.rcgraul.cripto_planet.security.jwt.JwtUtils;
@@ -91,7 +92,7 @@ public class AuthController {
         res.setStatus(true);
         res.setMessage("User authenticated successfully!");
 
-        return new ResponseEntity<>(res, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(res, HttpStatus.OK);
 
     }
 
@@ -110,7 +111,22 @@ public class AuthController {
         }
     }
 
-    
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String password) {
+
+        try {
+            userService.resetPassword(token, password);
+            return ResponseEntity.ok("Password reset successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());  // 400
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());  // 409
+        } catch (ExpiredTokenException e) {
+            return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());  // 410
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());  // 500
+        }
+    }
 
 
 }

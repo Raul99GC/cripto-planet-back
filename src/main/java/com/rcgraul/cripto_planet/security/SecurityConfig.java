@@ -1,6 +1,11 @@
 package com.rcgraul.cripto_planet.security;
 
 import com.rcgraul.cripto_planet.config.OAuth2LoginSuccessHandler;
+import com.rcgraul.cripto_planet.enums.UserRole;
+import com.rcgraul.cripto_planet.models.Role;
+import com.rcgraul.cripto_planet.repositories.RoleRepository;
+import com.rcgraul.cripto_planet.security.jwt.AuthEntryPointJwt;
+import com.rcgraul.cripto_planet.security.jwt.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -14,13 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfigurationSource;
-
-import com.rcgraul.cripto_planet.enums.UserRole;
-import com.rcgraul.cripto_planet.models.Role;
-import com.rcgraul.cripto_planet.repositories.RoleRepository;
-import com.rcgraul.cripto_planet.security.jwt.AuthEntryPointJwt;
-import com.rcgraul.cripto_planet.security.jwt.AuthTokenFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -50,6 +50,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests((requests)
                 -> requests
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/csrf-token").permitAll()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll()
         );
@@ -60,7 +61,10 @@ public class SecurityConfig {
             oauth.successHandler(oAuth2LoginSuccessHandler);
         });
 
-        http.csrf(csrf -> csrf.disable());
+        http.csrf(csrf -> csrf.csrfTokenRepository(
+             CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/api/v1/auth/**")
+        );
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         return http.build();
     }

@@ -92,7 +92,7 @@ public class AuthController {
         res.setStatus(true);
         res.setMessage("User authenticated successfully!");
 
-        return new ResponseEntity<>(res, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(res, HttpStatus.OK);
 
     }
 

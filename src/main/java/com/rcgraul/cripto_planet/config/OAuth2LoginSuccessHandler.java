@@ -191,7 +191,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                 authorities
         );
 
-        String jwtToken = jwtUtils.generateTokenFromEmail(userDetails);
+        String jwtToken = jwtUtils.generateTokenFromUserDetails(userDetails);
 
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/login")
                 .queryParam("token", jwtToken)

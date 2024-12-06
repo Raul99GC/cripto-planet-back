@@ -59,7 +59,7 @@ public class AuthController {
         Authentication auth = new UsernamePasswordAuthenticationToken(userReq.getEmail(), userReq.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        String jwt = jwtUtils.generateTokenFromEmail(userDetails);
+        String jwt = jwtUtils.generateTokenFromUserDetails(userDetails);
 
         AuthResponse res = new AuthResponse();
         res.setJwtToken(jwt);
@@ -85,7 +85,7 @@ public class AuthController {
         // extrae informacion del usuario de la actual sesion
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        String jwtToken = jwtUtils.generateTokenFromEmail(userDetails);
+        String jwtToken = jwtUtils.generateTokenFromUserDetails(userDetails);
 
         AuthResponse res = new AuthResponse();
         res.setJwtToken(jwtToken);

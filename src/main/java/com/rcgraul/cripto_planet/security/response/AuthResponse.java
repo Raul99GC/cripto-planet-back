@@ -6,6 +6,7 @@ import lombok.Data;
 public class AuthResponse {
 
     private String jwtToken;
+    private String refreshToken;
     private boolean status;
     private String message;
     private boolean isTwoFactorAuthEnabled;

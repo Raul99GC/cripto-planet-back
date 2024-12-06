@@ -13,7 +13,6 @@ import com.rcgraul.cripto_planet.repositories.RoleRepository;
 import com.rcgraul.cripto_planet.repositories.UserRepository;
 import com.rcgraul.cripto_planet.security.request.SignupRequest;
 import com.rcgraul.cripto_planet.utils.EmailService;
-import freemarker.template.TemplateException;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -105,7 +103,7 @@ public class UserService implements IUserService {
         return userRepository.findByUsername(username);
     }
 
-    public void generatePasswordResetToken(String email) throws MessagingException, TemplateException, IOException {
+    public void generatePasswordResetToken(String email) throws MessagingException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

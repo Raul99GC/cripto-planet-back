@@ -32,6 +32,7 @@ public class User {
 
   private String lastName;
 
+  @Column(nullable = true, unique = true)
   private String email;
 
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

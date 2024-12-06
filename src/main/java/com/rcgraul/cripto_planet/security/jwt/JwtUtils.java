@@ -20,6 +20,9 @@ public class JwtUtils {
     @Value("${spring.app.jwtSecret}")
     private String jwtSecret;
 
+    @Value("${spring.app.jwtSecretRefresh}")
+    private String jwtSecretRefresh;
+
     @Value("${spring.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
@@ -39,6 +42,10 @@ public class JwtUtils {
 
     private SecretKey key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    }
+
+    private SecretKey keyRefresh() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecretRefresh));
     }
 
     private Claims getClaimsFromToken(String token) {
@@ -62,7 +69,6 @@ public class JwtUtils {
 
     public String generateTokenFromUserDetails(UserDetailsImpl userDetails) {
 
-
         String email = userDetails.getEmail();
         String username = userDetails.getUsername();
         List<String> authorities = userDetails.getAuthorities()
@@ -77,10 +83,30 @@ public class JwtUtils {
                 .expiration(new Date((new Date().getTime() + 1200000))) // 20 min
                 .signWith(key());
 
+        if (email != null) token.claim("email", email);
+
+        return token.compact();
+    }
+
+    public String generateRefreshToken(UserDetailsImpl userDetails) {
+        String email = userDetails.getEmail();
+        String username = userDetails.getUsername();
+        List<String> authorities = userDetails.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        JwtBuilder token = Jwts.builder()
+                .subject(username)
+                .claim("authorities", authorities)
+                .issuedAt(new Date())
+                .expiration(new Date((new Date().getTime() + 86400000))) // 24 hrs
+                .signWith(keyRefresh());
 
         if (email != null) token.claim("email", email);
 
         return token.compact();
+
     }
 
     public boolean validateToken(String authToken) {

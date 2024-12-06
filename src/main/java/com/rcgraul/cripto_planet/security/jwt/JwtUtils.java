@@ -1,25 +1,18 @@
 package com.rcgraul.cripto_planet.security.jwt;
 
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.crypto.SecretKey;
-
 import com.rcgraul.cripto_planet.security.services.UserDetailsImpl;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
@@ -67,22 +60,27 @@ public class JwtUtils {
         return String.valueOf(getClaimsFromToken(token).get("authorities"));
     }
 
-    public String generateTokenFromEmail(UserDetailsImpl userDetails) {
+    public String generateTokenFromUserDetails(UserDetailsImpl userDetails) {
 
-        String email = userDetails.getUsername();
+
+        String email = userDetails.getEmail();
+        String username = userDetails.getUsername();
         List<String> authorities = userDetails.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        return Jwts.builder()
-                .subject(email)
-                .claim("email", email)
+        JwtBuilder token = Jwts.builder()
+                .subject(username)
                 .claim("authorities", authorities)
                 .issuedAt(new Date())
-                .expiration(new Date((new Date().getTime() + 86400000)))
-                .signWith(key())
-                .compact();
+                .expiration(new Date((new Date().getTime() + 1200000))) // 20 min
+                .signWith(key());
+
+
+        if (email != null) token.claim("email", email);
+
+        return token.compact();
     }
 
     public boolean validateToken(String authToken) {

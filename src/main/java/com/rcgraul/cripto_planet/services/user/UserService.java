@@ -65,7 +65,7 @@ public class UserService implements IUserService {
         Set<String> roles = signupRequest.getRoles();
 
         if (roles == null || roles.isEmpty()) {
-            role = roleRepository.findByRoleName(UserRole.ROLE_ADMIN).orElseThrow(() -> new RoleNotFoundException("Role " + UserRole.ROLE_COSTUMER + " not found"));
+            role = roleRepository.findByRoleName(UserRole.ROLE_COSTUMER).orElseThrow(() -> new RoleNotFoundException("Role " + UserRole.ROLE_COSTUMER + " not found"));
         } else {
             String roleSrt = roles.iterator().next();
             if (roleSrt.equals("admin")) {

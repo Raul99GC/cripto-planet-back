@@ -60,9 +60,11 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String jwt = jwtUtils.generateTokenFromUserDetails(userDetails);
+        String refreshToken = jwtUtils.generateRefreshToken(userDetails);
 
         AuthResponse res = new AuthResponse();
         res.setJwtToken(jwt);
+        res.setRefreshToken(refreshToken);
         res.setStatus(true);
         res.setMessage("User registered successfully!");
 
@@ -86,9 +88,11 @@ public class AuthController {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         String jwtToken = jwtUtils.generateTokenFromUserDetails(userDetails);
+        String refreshToken = jwtUtils.generateRefreshToken(userDetails);
 
         AuthResponse res = new AuthResponse();
         res.setJwtToken(jwtToken);
+        res.setRefreshToken(refreshToken);
         res.setStatus(true);
         res.setMessage("User authenticated successfully!");
 

@@ -32,10 +32,8 @@ public class SecurityConfig {
     @Lazy
     private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
-    }
+    @Autowired
+    private AuthTokenFilter authenticationJwtTokenFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -50,12 +48,13 @@ public class SecurityConfig {
         http.authorizeHttpRequests((requests)
                 -> requests
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/coin/**").permitAll()
                 .requestMatchers("/api/v1/csrf-token").permitAll()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll()
         );
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
-        http.addFilterBefore(authenticationJwtTokenFilter(), BasicAuthenticationFilter.class);
+        http.addFilterBefore(authenticationJwtTokenFilter, BasicAuthenticationFilter.class);
 
         http.oauth2Login(oauth -> {
             oauth.successHandler(oAuth2LoginSuccessHandler);
@@ -64,6 +63,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.csrfTokenRepository(
              CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers("/api/v1/auth/**")
+                .ignoringRequestMatchers("/api/v1/coin/**")
         );
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         return http.build();

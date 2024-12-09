@@ -20,7 +20,7 @@ public class CoinController {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @GetMapping("/list")
+    @GetMapping()
     ResponseEntity<List<Coin>> getCoinList(@RequestParam("page") int page) throws Exception {
         return ResponseEntity.ok(coinService.getCoinList(page));
     }

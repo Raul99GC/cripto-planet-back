@@ -57,9 +57,9 @@ public class JwtUtils {
                 .getPayload();
     }
 
-    public String getEmailFromToken(String token) {
+    public String getUsernameFromToken(String token) {
 
-        return String.valueOf(getClaimsFromToken(token).get("email"));
+        return String.valueOf(getClaimsFromToken(token).get("sub"));
     }
 
     public String getAuthorities(String token) {
@@ -112,6 +112,7 @@ public class JwtUtils {
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser().verifyWith((SecretKey) key()).build().parseSignedClaims(authToken);
+            return true;
         } catch (MalformedJwtException e) {
             throw new IllegalArgumentException("Invalid JWT token", e);
         } catch (ExpiredJwtException e) {
@@ -121,7 +122,6 @@ public class JwtUtils {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("JWT claims string is empty", e);
         }
-        return false;
     }
 
 }

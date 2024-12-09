@@ -102,11 +102,11 @@ public class CoinService implements ICoinService {
             coin.setTotalVolume(marketData.get("total_volume").get("usd").asLong());
             coin.setHigh24h(marketData.get("high_24h").get("usd").asDouble());
             coin.setLow24h(marketData.get("low_24h").get("usd").asDouble());
-            coin.setPriceChange24h(marketData.get("price_change_24h").get("usd").asDouble());
+            coin.setPriceChange24h(marketData.get("price_change_24h_in_currency").get("usd").asDouble());
             coin.setPriceChangePercentage24h(marketData.get("price_change_percentage_24h").asDouble());
-            coin.setMarketCapChange24h(marketData.get("market_cap_change_24h").get("usd").asLong());
+            coin.setMarketCapChange24h(marketData.get("market_cap_change_24h_in_currency").get("usd").asLong());
             coin.setMarketCapChangePercentage24h(marketData.get("market_cap_change_percentage_24h").asDouble());
-            coin.setTotalSupply(marketData.get("total_supply").get("usd").asLong());
+            coin.setTotalSupply(marketData.get("total_supply").asLong());
 
             coin.setCirculatingSupply(marketData.get("circulating_supply").asLong());
 

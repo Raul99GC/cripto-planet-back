@@ -1,15 +1,19 @@
 package com.rcgraul.cripto_planet.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rcgraul.cripto_planet.models.Coin;
 import com.rcgraul.cripto_planet.services.coin.CoinService;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/v1/coin")
 public class CoinController {
@@ -21,12 +25,13 @@ public class CoinController {
     private ObjectMapper objectMapper;
 
     @GetMapping()
-    ResponseEntity<List<Coin>> getCoinList(@RequestParam("page") int page) throws Exception {
+    ResponseEntity<List<Coin>> getCoinList(@RequestParam("page") @Min(0) int page) {
+
         return ResponseEntity.ok(coinService.getCoinList(page));
     }
 
     @GetMapping("/{id}/chart")
-    ResponseEntity<JsonNode> getMarketChart(@PathVariable String id, @RequestParam("days") int days) throws Exception {
+    ResponseEntity<JsonNode> getMarketChart(@PathVariable String id, @RequestParam("days") int days) throws JsonProcessingException {
         return ResponseEntity.ok(objectMapper.readTree(coinService.getMarketChart(id, days)));
     }
 

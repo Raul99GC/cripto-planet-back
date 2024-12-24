@@ -11,7 +11,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -38,13 +37,7 @@ public class User {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String password;
 
-  private boolean accountNonLocked = true;
-  private boolean accountNonExpired = true;
-  private boolean credentialsNonExpired = true;
   private boolean enabled = true;
-
-  private LocalDate credentialsExpiryDate;
-  private LocalDate accountExpiryDate;
 
   @Embedded
   private TwoFactorAuth twoFactorAuth = new TwoFactorAuth();

@@ -3,8 +3,11 @@ package com.rcgraul.cripto_planet.models;
 import com.rcgraul.cripto_planet.enums.WalletTransactionType;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -22,9 +25,16 @@ public class WalletTransaction {
 
     private LocalDate date;
 
-    private String transferId;
+    private UUID transferId;
 
     private Long amount;
 
     private String purpose;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

@@ -1,14 +1,17 @@
 package com.rcgraul.cripto_planet.services.wallet;
 
 import com.rcgraul.cripto_planet.enums.OrderType;
+import com.rcgraul.cripto_planet.enums.WalletTransactionType;
 import com.rcgraul.cripto_planet.models.Order;
 import com.rcgraul.cripto_planet.models.User;
 import com.rcgraul.cripto_planet.models.Wallet;
 import com.rcgraul.cripto_planet.repositories.WalletRepository;
+import com.rcgraul.cripto_planet.services.transaction.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,18 +21,21 @@ public class WalletService implements IWalletService {
     @Autowired
     private WalletRepository walletRepository;
 
+    @Autowired
+    private TransactionService transactionService;
+
     @Override
-    public Wallet getUserWallet(User user) {
-
-        Wallet wallet = walletRepository.findByUserId(user.getId());
-
-        if (wallet == null) {
-            wallet = new Wallet();
-            wallet.setUser(user);
-            walletRepository.save(wallet);
-        }
+    public Wallet createWallet(User user) {
+        Wallet wallet = new Wallet();
+        wallet.setUser(user);
+        walletRepository.save(wallet);
 
         return wallet;
+    }
+
+    @Override
+    public Wallet getUserWallet(User user) {
+        return walletRepository.findByUserId(user.getId());
     }
 
     @Override
@@ -71,6 +77,15 @@ public class WalletService implements IWalletService {
         BigDecimal reciverBalance = reciverWallet.getBalance()
                 .add(BigDecimal.valueOf(amount));
         reciverWallet.setBalance(reciverBalance);
+
+        transactionService.createTransaction(
+                reciverWallet,
+                WalletTransactionType.WALLET_TRANSFER,
+                reciverWallet.getId(),
+                "wallet transfer",
+                LocalDateTime.now(),
+                amount);
+
         walletRepository.save(reciverWallet);
 
         return senderWallet;

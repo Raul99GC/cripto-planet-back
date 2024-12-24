@@ -1,5 +1,6 @@
 package com.rcgraul.cripto_planet.security.jwt;
 
+import com.rcgraul.cripto_planet.enums.JwtType;
 import com.rcgraul.cripto_planet.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,23 +50,30 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecretRefresh));
     }
 
-    private Claims getClaimsFromToken(String token) {
+    private Claims getClaimsFromToken(String token, JwtType type) {
 
-        return Jwts.parser()
-                .verifyWith(key())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        if (type == JwtType.REFRESH_TOKEN) {
+            return Jwts.parser()
+                    .verifyWith(keyRefresh())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } else if (type == JwtType.SIGNIN_TOKEN) {
+            return Jwts.parser()
+                    .verifyWith(key())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        }
+        return null;
     }
 
-    public String getUsernameFromToken(String token) {
-
-        return String.valueOf(getClaimsFromToken(token).get("sub"));
+    public String getUsernameFromToken(String token, JwtType type) {
+        return String.valueOf(Objects.requireNonNull(getClaimsFromToken(token, type)).get("sub"));
     }
 
-    public String getAuthorities(String token) {
-
-        return String.valueOf(getClaimsFromToken(token).get("authorities"));
+    public String getAuthorities(String token, JwtType type) {
+        return String.valueOf(Objects.requireNonNull(getClaimsFromToken(token, type)).get("authorities"));
     }
 
     public String generateTokenFromUserDetails(UserDetailsImpl userDetails) {
@@ -80,7 +89,7 @@ public class JwtUtils {
                 .subject(username)
                 .claim("authorities", authorities)
                 .issuedAt(new Date())
-                .expiration(new Date((new Date().getTime() + 1200000))) // 20 min
+                .expiration(new Date((new Date().getTime() + 7200000))) // 2 hrs
                 .signWith(key());
 
         if (email != null) token.claim("email", email);
@@ -124,4 +133,31 @@ public class JwtUtils {
         }
     }
 
+    public boolean validateRefreshToken(String authToken) {
+        try {
+            Jwts.parser().verifyWith((SecretKey) keyRefresh()).build().parseSignedClaims(authToken);
+            return true;
+        } catch (MalformedJwtException e) {
+            throw new IllegalArgumentException("Invalid JWT token", e);
+        } catch (ExpiredJwtException e) {
+            throw new IllegalArgumentException("Expired JWT token", e);
+        } catch (UnsupportedJwtException e) {
+            throw new IllegalArgumentException("Unsupported JWT token", e);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("JWT claims string is empty", e);
+        }
+    }
+
+    public String generateTokenFromRefreshToken(String refreshToken) {
+        if (!validateRefreshToken(refreshToken)) throw new IllegalArgumentException("Invalid Refresh Token");
+
+        JwtBuilder token = Jwts.builder()
+                .subject(getUsernameFromToken(refreshToken, JwtType.REFRESH_TOKEN))
+                .claim("authorities", getAuthorities(refreshToken, JwtType.REFRESH_TOKEN))
+                .issuedAt(new Date())
+                .expiration(new Date((new Date().getTime() + 7200000))) // 2 hrs
+                .signWith(key());
+
+        return token.compact();
+    }
 }

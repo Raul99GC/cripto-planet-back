@@ -7,6 +7,9 @@ import com.rcgraul.cripto_planet.models.Wallet;
 import java.util.UUID;
 
 public interface IWalletService {
+
+    Wallet createWallet(User user);
+
     Wallet getUserWallet(User user);
 
     Wallet addBalance(Wallet wallet, Long amount);

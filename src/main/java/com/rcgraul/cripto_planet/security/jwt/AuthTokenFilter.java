@@ -1,5 +1,6 @@
 package com.rcgraul.cripto_planet.security.jwt;
 
+import com.rcgraul.cripto_planet.enums.JwtType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,8 +30,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         try {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateToken(jwt)) {
-                String sub = jwtUtils.getUsernameFromToken(jwt);
-                String authorities = jwtUtils.getAuthorities(jwt);
+                String sub = jwtUtils.getUsernameFromToken(jwt, JwtType.SIGNIN_TOKEN);
+                String authorities = jwtUtils.getAuthorities(jwt,JwtType.SIGNIN_TOKEN);
 
                 List<GrantedAuthority> authoritiesList = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
 

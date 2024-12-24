@@ -1,8 +1,6 @@
 package com.rcgraul.cripto_planet.controllers;
 
-import com.rcgraul.cripto_planet.exceptions.EmailAlreadyExistsException;
-import com.rcgraul.cripto_planet.exceptions.ExpiredTokenException;
-import com.rcgraul.cripto_planet.exceptions.UsernameAlreadyExistsException;
+import com.rcgraul.cripto_planet.models.User;
 import com.rcgraul.cripto_planet.security.MessageResponse;
 import com.rcgraul.cripto_planet.security.jwt.JwtUtils;
 import com.rcgraul.cripto_planet.security.request.SigninRequest;
@@ -11,6 +9,8 @@ import com.rcgraul.cripto_planet.security.response.AuthResponse;
 import com.rcgraul.cripto_planet.security.services.UserDetailsImpl;
 import com.rcgraul.cripto_planet.security.services.UserDetailsServiceImpl;
 import com.rcgraul.cripto_planet.services.user.UserService;
+import com.rcgraul.cripto_planet.services.wallet.WalletService;
+import com.rcgraul.cripto_planet.services.watchlist.WatchlistService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,19 +38,23 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private WatchlistService watchlistService;
+
+    @Autowired
+    private WalletService walletService;
+
     @PostMapping("/signup")
     public ResponseEntity<?> register(@Valid @RequestBody SignupRequest userReq) {
 
-        try {
-            // Registrar el usuario
-            userService.registerUser(userReq);
+        // Registrar el usuario
+        User savedUser = userService.registerUser(userReq);
 
-        } catch (UsernameAlreadyExistsException | EmailAlreadyExistsException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
-        } catch (Exception e) {
-            System.out.println(e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("An unexpected error occurred"));
-        }
+        // Crear Wallet
+        walletService.createWallet(savedUser);
+
+        // Crear Watchlist
+        watchlistService.createWatchlist(savedUser);
 
         // Cargar los detalles del usuario recién registrado
         UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(userReq.getEmail());
@@ -69,17 +72,13 @@ public class AuthController {
         res.setMessage("User registered successfully!");
 
         return new ResponseEntity<>(res, HttpStatus.CREATED);
-
     }
 
     @PostMapping("/signin")
     public ResponseEntity<?> login(@Valid @RequestBody SigninRequest userReq) {
         Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userReq.getEmail(), userReq.getPassword()));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid credentials"));
-        }
+
+        authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userReq.getEmail(), userReq.getPassword()));
 
         // set the authentication
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -101,36 +100,29 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) throws MessagingException {
 
-        try {
-            userService.generatePasswordResetToken(email);
-            return ResponseEntity.ok(new MessageResponse("password reset email sent"));
-        } catch (MessagingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("Error sending password reset email"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse(e.getMessage()));
-        }
+        userService.generatePasswordResetToken(email);
+        return ResponseEntity.ok(new MessageResponse("password reset email sent"));
+
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String password) {
 
-        try {
-            userService.resetPassword(token, password);
-            return ResponseEntity.ok("Password reset successfully.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());  // 400
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());  // 409
-        } catch (ExpiredTokenException e) {
-            return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());  // 410
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());  // 500
-        }
+        userService.resetPassword(token, password);
+        return ResponseEntity.ok("Password reset successfully.");
+
     }
 
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestParam String refreshToken) {
+        String jwtToken = jwtUtils.generateTokenFromRefreshToken(refreshToken);
+        AuthResponse res = new AuthResponse();
+        res.setJwtToken(jwtToken);
+        res.setStatus(true);
+        res.setMessage("Token refreshed successfully!");
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
 
 }

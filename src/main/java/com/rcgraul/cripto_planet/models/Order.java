@@ -1,5 +1,6 @@
 package com.rcgraul.cripto_planet.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.rcgraul.cripto_planet.enums.OrderStatus;
 import com.rcgraul.cripto_planet.enums.OrderType;
 import jakarta.persistence.*;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @Data
 @Entity
+@Table(name = "orders")
 public class Order {
 
     @Id
@@ -32,6 +34,7 @@ public class Order {
     private OrderStatus status;
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private OrderItem orderItem;
 
     @CreationTimestamp

@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
@@ -78,12 +77,7 @@ public class UserService implements IUserService {
         newUser.setFirstName(signupRequest.getFirstName());
         newUser.setLastName(signupRequest.getLastName());
         newUser.setRole(role);
-        newUser.setAccountNonLocked(true);
-        newUser.setAccountNonExpired(true);
-        newUser.setCredentialsNonExpired(true);
         newUser.setEnabled(true);
-        newUser.setCredentialsExpiryDate(LocalDate.now().plusYears(30));
-        newUser.setAccountExpiryDate(LocalDate.now().plusYears(30));
 
         return userRepository.save(newUser);
     }
